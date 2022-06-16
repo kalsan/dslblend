@@ -1,0 +1,1 @@
+Note: The contents of this directory were the first attempts to test whether this Gem works. TODO: Replace them with proper tests.
