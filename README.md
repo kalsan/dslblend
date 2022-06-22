@@ -9,8 +9,9 @@ object calling the block. It features:
 
 Note that when accessing instance variables from within a DSL block, you are
 looking at a shallow copy of the object. Writing to primitive types will not
-affect the main provider. Altering complex types will however alter the object
-that the main providers is also referencing to.
+affect the main provider, unless instance variable backfiring is enabled (see
+below). Altering complex types will however alter the object that the main
+providers is also referencing to, regardless of the backfire setting.
 
 # Examples
 
@@ -104,6 +105,30 @@ To mitigate this, the main provider can be given as follows on instanciation:
 
 ```ruby
 TestDsl.new(horse, dog, main_provider: object_of_your_choice_e_g_self)
+```
+
+# Backfiring instance variables
+
+As stated above, adding or overwriting instance variables within the evaluation
+of the DSL will normally not alter the main provider. However, Dslblend can
+transfer the DSLs instance variables back to the main provider through a
+mechanism called backfire (the name sounds dangerous on purpose, use this
+feature with caution to avoid side effects).
+
+To enable the feature, pass the argument `backfire_vars: true` to the `evaluate` call:
+
+```ruby
+class Testlab
+  def backfire_demo
+    @foo = 42
+    Testdsl.new.evaluate(backfire_vars: true) do
+      @foo = 123
+      @bar = 3.14
+    end
+    @foo == 123 # true
+    @bar == 3.14 # true
+  end
+end
 ```
 
 # Credits

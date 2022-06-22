@@ -6,13 +6,29 @@ module Dslblend
       @_additional_providers = additional_providers
     end
 
-    def evaluate(&block)
+    def evaluate(backfire_vars: false, &block)
+      # Auto-detect main provider if it is not given yet
       @_main_provider ||= eval 'self', block.binding, __FILE__, __LINE__
+
+      # Transfer instance variables from main provider instance to dsl instance, ignore those starting with "_"
       @_main_provider.instance_variables.each do |instance_variable|
         next if instance_variable.to_s.start_with?('@_')
         instance_variable_set(instance_variable, @_main_provider.instance_variable_get(instance_variable))
       end
-      instance_eval(&block)
+
+      # Evaluate block within the DSL
+      block_return_value = instance_eval(&block)
+
+      # If backfire is enabled, transfer dsl instance variables back to main provider instance, ignore those starting with "_"
+      if backfire_vars
+        instance_variables.each do |instance_variable|
+          next if instance_variable.to_s.start_with?('@_')
+
+          @_main_provider.instance_variable_set(instance_variable, instance_variable_get(instance_variable))
+        end
+      end
+
+      return block_return_value
     end
 
     def method_missing(method, *args, &block)

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'dslblend'
-  s.version     = '0.0.1'
+  s.version     = '0.0.2'
   s.summary     = 'This gem allows to build an instance_eval based DSL without losing access to the object calling the block.'
   s.description = 'Please refer to https://github.com/kalsan/dslblend/blob/main/README.md'
   s.authors     = ['Sandro Kalbermatter']
