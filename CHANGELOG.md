@@ -1,3 +1,7 @@
+# 0.0.4
+
+Fix a bug that prevented the use of double splat operator with Dslblend
+
 # 0.0.3
 
 Externalize evaluation prequel and sequel funcationality into `_dslblend_`
