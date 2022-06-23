@@ -48,7 +48,7 @@ module Dslblend
     def method_missing(method, *args, **kwargs, &block)
       @_additional_providers.each do |additional_provider|
         if additional_provider.respond_to?(method)
-          return additional_provider.send(method, *args, &block)
+          return additional_provider.send(method, *args, **kwargs, &block)
         end
       end
       @_main_provider.send method, *args, **kwargs, &block
