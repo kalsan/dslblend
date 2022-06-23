@@ -51,7 +51,7 @@ module Dslblend
           return additional_provider.send(method, *args, &block)
         end
       end
-      @_main_provider.send method, *args, &block
+      @_main_provider.send method, *args, **kwargs, &block
     end
 
     def respond_to_missing?(method, include_all)
