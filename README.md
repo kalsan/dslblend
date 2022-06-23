@@ -7,6 +7,8 @@ object calling the block. It features:
   providers*) before falling back to the object calling the DSL
 - Accessing instance variables within the object calling the DSL
 
+It can also act as a context for renderers such as the HAML engine (see below).
+
 Note that when accessing instance variables from within a DSL block, you are
 looking at a shallow copy of the object. Writing to primitive types will not
 affect the main provider, unless instance variable backfiring is enabled (see
@@ -128,6 +130,28 @@ class Testlab
     @foo == 123 # true
     @bar == 3.14 # true
   end
+end
+```
+
+# Using Dslblend with HAML and friends
+
+An interesting use/abuse (pick your opinion) of Dslblend is using it as a
+context for rendering engines such as HAML, similar to Rails' `ActionView`.
+Since `HAML::Engine` uses its own `instance_eval`, it does not call Dslblend's
+`evaluate` and thus, the Dslblend object is not initialized properly. To address
+it, you can call the initialization methods yourself. To avoid namespace
+collisions, they are prefixed with `_dslblend_`. Here is an example:
+
+```ruby
+# Assuming you have the instance of the Rails controller and wish to use it to render some HAML in `@content`.
+# The goal is to be able to call controller methods such as `link_to`, `form_for` etc. from inside the HAML.
+def render_content_to_string(controller, locals)
+  controller.helpers.extend Haml::Helpers
+  controller.helpers.init_haml_helpers
+  # Explicitely setting the main provider on instanciation allows us to skip `_dslblend_detect_main_provider`.
+  context = Dslblend::Base.new(controller, main_provider: self)
+  request_context._dslblend_transfer_inst_vars_from_main_provider # This is necessary because HAML does not call Dslblend's `evaluate`.
+  return Haml::Engine.new(@content.strip_heredoc, format: :html5).render(context, { **locals })
 end
 ```
 

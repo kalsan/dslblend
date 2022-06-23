@@ -6,28 +6,42 @@ module Dslblend
       @_additional_providers = additional_providers
     end
 
-    def evaluate(backfire_vars: false, &block)
-      # Auto-detect main provider if it is not given yet
-      @_main_provider ||= eval 'self', block.binding, __FILE__, __LINE__
+    # Usually, you will not need to use the methods prefixed with `_dslblend_`. However, they can come in
+    # useful if you have special needs such as preparing a context for HAML engine etc.
 
-      # Transfer instance variables from main provider instance to dsl instance, ignore those starting with "_"
+    # Auto-detect main provider if it is not given yet
+    def _dslblend_detect_main_provider(block)
+      @_main_provider ||= eval 'self', block.binding, __FILE__, __LINE__
+    end
+
+    # Transfer instance variables from main provider instance to dsl instance, ignore those starting with "_"
+    def _dslblend_transfer_inst_vars_from_main_provider
       @_main_provider.instance_variables.each do |instance_variable|
         next if instance_variable.to_s.start_with?('@_')
         instance_variable_set(instance_variable, @_main_provider.instance_variable_get(instance_variable))
       end
+    end
+
+    # Transfer dsl instance variables back to main provider instance, ignore those starting with "_"
+    def _dslblend_backfire_inst_vars_to_main_provider
+      instance_variables.each do |instance_variable|
+        next if instance_variable.to_s.start_with?('@_')
+        @_main_provider.instance_variable_set(instance_variable, instance_variable_get(instance_variable))
+      end
+    end
+
+    def evaluate(backfire_vars: false, &block)
+      # Prepare this instance
+      _dslblend_detect_main_provider(block)
+      _dslblend_transfer_inst_vars_from_main_provider
 
       # Evaluate block within the DSL
       block_return_value = instance_eval(&block)
 
-      # If backfire is enabled, transfer dsl instance variables back to main provider instance, ignore those starting with "_"
-      if backfire_vars
-        instance_variables.each do |instance_variable|
-          next if instance_variable.to_s.start_with?('@_')
+      # Write back vars if requested
+      _dslblend_backfire_inst_vars_to_main_provider if backfire_vars
 
-          @_main_provider.instance_variable_set(instance_variable, instance_variable_get(instance_variable))
-        end
-      end
-
+      # Allow sending back information from the block to the caller of `evaluate`
       return block_return_value
     end
 
