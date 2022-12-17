@@ -1,3 +1,7 @@
+# All methods available right at your fingertips
+
+<img src="logo.svg" height=250 alt="Dyny logo"/>
+
 This gem allows to build an instance_eval based DSL without losing access to the
 object calling the block. It features:
 
